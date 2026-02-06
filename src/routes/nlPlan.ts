@@ -12,20 +12,23 @@ import { enrichPlan } from '../services/proEnricher';
 import { normalizePrompt, normalizeConstraints } from '../utils/promptNormalizer';
 import { NLPlanRequest, NLPlanResponse, Mode } from '../types';
 
-const ENDPOINT_METADATA = {
-  name: 'Solana NL Action Plan Translator',
-  version: '1.0.0',
-  description:
-    'Translates natural language prompts into structured, safe Solana action plans. Planner-only by default — no ready-to-sign transactions.',
-  endpoint: '/api/v1/solana/nl-plan',
-  method: 'POST',
-  pricing: { amount: '$0.02', unit: 'per call' },
-  modes: ['lite', 'pro'],
-  supported_actions: ['swap', 'transfer', 'stake', 'unstake', 'lend', 'borrow', 'nft_buy', 'nft_sell'],
-  supported_protocols: ['jupiter', 'sanctum', 'pumpfun', 'pumpswap', 'raydium', 'tensor', 'marinade', 'jito'],
-  input_schema: { $ref: '#/definitions/NLPlanRequest' },
-  output_schema: { $ref: '#/definitions/NLPlanResponse' },
-};
+function buildMetadata(payToAddress?: string) {
+  return {
+    name: 'Solana NL Action Plan Translator',
+    version: '1.0.0',
+    description:
+      'Translates natural language prompts into structured, safe Solana action plans. Planner-only by default — no ready-to-sign transactions.',
+    endpoint: '/api/v1/solana/nl-plan',
+    method: 'POST',
+    pricing: { amount: '$0.02', unit: 'per call' },
+    ...(payToAddress ? { pay_to_address: payToAddress } : {}),
+    modes: ['lite', 'pro'],
+    supported_actions: ['swap', 'transfer', 'stake', 'unstake', 'lend', 'borrow', 'nft_buy', 'nft_sell'],
+    supported_protocols: ['jupiter', 'sanctum', 'pumpfun', 'pumpswap', 'raydium', 'tensor', 'marinade', 'jito'],
+    input_schema: { $ref: '#/definitions/NLPlanRequest' },
+    output_schema: { $ref: '#/definitions/NLPlanResponse' },
+  };
+}
 
 function cacheKey(normalizedPrompt: string, mode: string, constraintsJson: string): string {
   const hash = createHash('sha256').update(`${normalizedPrompt}|${mode}|${constraintsJson}`).digest('hex');
@@ -33,7 +36,7 @@ function cacheKey(normalizedPrompt: string, mode: string, constraintsJson: strin
 }
 
 export function createNLPlanRouter(
-  options: { anthropicApiKey?: string; logger?: Logger },
+  options: { anthropicApiKey?: string; payToAddress?: string; logger?: Logger },
   cache: LRUCache<NLPlanResponse>,
 ): Router {
   const router = Router();
@@ -44,8 +47,10 @@ export function createNLPlanRouter(
     logger?.warn('token_registry_refresh_failed', { error: String(err) });
   });
 
+  const metadata = buildMetadata(options.payToAddress);
+
   router.get('/', (_req: Request, res: Response) => {
-    res.json(ENDPOINT_METADATA);
+    res.json(metadata);
   });
 
   router.post('/', bodyUnwrapper, async (req: Request, res: Response) => {

@@ -3,11 +3,13 @@ import { createApp } from './app';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 const RATE_LIMIT_RPM = parseInt(process.env.RATE_LIMIT_RPM || '60', 10);
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const PAY_TO_ADDRESS = process.env.PAY_TO_ADDRESS;
 
 const { app, logger } = createApp({
   enableLogging: true,
   rateLimitRpm: RATE_LIMIT_RPM,
   anthropicApiKey: ANTHROPIC_API_KEY,
+  payToAddress: PAY_TO_ADDRESS,
 });
 
 const server = app.listen(PORT, () => {

@@ -21,7 +21,7 @@ export function createApp(options: AppOptions = {}) {
   }
 
   app.use('/api/v1/solana/nl-plan', createNLPlanRouter(
-    { anthropicApiKey: options.anthropicApiKey, logger },
+    { anthropicApiKey: options.anthropicApiKey, payToAddress: options.payToAddress, logger },
     cache,
   ));
 

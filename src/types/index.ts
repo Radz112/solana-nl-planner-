@@ -123,4 +123,5 @@ export interface AppOptions {
   rateLimitRpm?: number;
   bodyLimit?: string;
   anthropicApiKey?: string;
+  payToAddress?: string;
 }
